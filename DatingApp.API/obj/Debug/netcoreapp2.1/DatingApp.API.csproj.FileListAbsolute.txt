@@ -1,0 +1,14 @@
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/bin/Debug/netcoreapp2.1/DatingApp.API.deps.json
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/bin/Debug/netcoreapp2.1/DatingApp.API.runtimeconfig.json
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/bin/Debug/netcoreapp2.1/DatingApp.API.runtimeconfig.dev.json
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/bin/Debug/netcoreapp2.1/DatingApp.API.dll
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/bin/Debug/netcoreapp2.1/DatingApp.API.pdb
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/obj/Debug/netcoreapp2.1/DatingApp.API.csprojAssemblyReference.cache
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/obj/Debug/netcoreapp2.1/DatingApp.API.csproj.CoreCompileInputs.cache
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/obj/Debug/netcoreapp2.1/DatingApp.API.RazorAssemblyInfo.cache
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/obj/Debug/netcoreapp2.1/DatingApp.API.RazorAssemblyInfo.cs
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/obj/Debug/netcoreapp2.1/DatingApp.API.AssemblyInfoInputs.cache
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/obj/Debug/netcoreapp2.1/DatingApp.API.AssemblyInfo.cs
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/obj/Debug/netcoreapp2.1/DatingApp.API.RazorTargetAssemblyInfo.cache
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/obj/Debug/netcoreapp2.1/DatingApp.API.dll
+/Users/omarshanti/Code/ASPNet+Angular/DatingApp/DatingApp.API/obj/Debug/netcoreapp2.1/DatingApp.API.pdb
