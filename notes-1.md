@@ -365,13 +365,18 @@ We physically create a `.gitignore` file there
 
 
 
+
+
+
 ------------------------------------------------------------------------------------------------------------------
 
 
 
 
 
+
 Section 3 : Security
+
 
 
 
@@ -396,11 +401,12 @@ You can suggest we Hash the password with SHA512, but a few problems:
  search of their DB to attack relatively simply.
 
 Hashing is good, but not enough on its own.
-So you need to add a Salt to the password before you hash it! A Salt is a randomly generated string that ensures
- the same clear-text password maps to different stored entries. A salt is stored in the DB along with the result
- of the Hash Function. It prevents the same attack-vector of storing Hashes of commonly used passwords in a DB.
- That way __hackers cant determine if the same person uses the same password a cross diff systems!!!__
-Hashed value = SHA256 (Salt value + Password)
+So you need to add a `Salt` to the password before you hash it! 
+A Salt is a randomly generated string that ensures that the same clear-text password maps to different stored entries.
+A salt is stored in the DB along with the result of the Hash Function. It prevents the same attack-vector of storing 
+ Hashes of commonly used passwords in a DB.
+ That way __hackers cant determine if the same person uses the same password across diff systems!!!__
+`Hashed value = SHA256 (Salt value + Password)`
 
 Back in the API, let's create a User Model to scaffold the User table for us!
 1) Create `Models/User.cs`
@@ -408,12 +414,26 @@ Back in the API, let's create a User Model to scaffold the User table for us!
 3) Add a migration & update database: `dotnet ef migrations add AddedUserTable` and `dotnet ef database update`
 
 Thus far we've retrieved data from our DB by using the context directly in the controller. But theres another way:
-__The Repository PAttern__
+
+__The Repository Pattern!__
+
+----------------------------------------------
+
+__The Repository Pattern :__
+
 
 It's not scalable to add methods directly into our controllers.
-There's already a layer of abstraction between our controllers & the Datbaase: Entity Framework.
-We query EF and EF translates this into SQL.
-But we should add a further level of abstraction, which we can do with the Repository Pattern
+There's already a layer of abstraction between our controllers & the Database: Entity Framework.
+ - We query EF and EF translates this into SQL.
+ - But what if we don't want to depend on EF? 
+	- What if EF changes? Or a new project doens't want to use it?
+		- Well, we could add a further level of abstraction.
+		- This is described below; it is called the Repository Pattern.
+
+Repository "mediates between the data layer and the business layer... 
+ separates the business logic from the interactions with the underlying 
+ data source or Web service"
+ - Layer in between Entity Framework & our controlllers
 
 Warehouse Metaphor:
 We're currently asking each controller to independently (with the help of EF but still independently) go through
@@ -423,11 +443,13 @@ We're currently asking each controller to independently (with the help of EF but
 	 However, we are still tied to Entity Framework as our ORM and if we want to change it we need to
 	 re-write our controllers, which is not ideal.
 	2) If we add add'l controllers, they all need to repeat the exact same work
+The Repo here is almost like a "Magic Shelf", where you can either put a box or always find the box you need.
 
 So we add an additional layer of abstraction between Entity Framework & our controllers.
 The Controller communicates with the Repository Interface which exposes methods. The controller has no 
- idea how these methods are implemented. It only needs to know the methods exposed
+ idea how these methods are implemented. It only needs to know the methods exposed and call the ones it wants!
 The repository interface of course maps to an implementation which makes all of the queries itself to the DBs
+ - We can change the implementation @ any time, so long as the interface remains constant
 
 Why should we use Repository Pattern?
 1) Minimizes duplicate query logic
@@ -440,21 +462,54 @@ Steps:
 2) Create a file to hold implementations: `Data/AuthRepoistory.cs`. Have it implement the interface we just created
  & write out funxns. We must inject `DbContext` here because this will be managing Data.
 
-In the case of Registration & Authentication (sinnce this is Auth anyway), we rely on the `User` model from beofre
+In the case of Registration & Authentication (since this is Auth anyway), we rely on the `User` model
 The code is shown in the C# file.
 
-Now we need to tell our app about our Auth & IAuth Repositories. We add it as a Service in `Startup.cs`
- so we can then use it throughout out app.
-Now in `ConfigureServices` we run `services.`
+Now we need to tell our app about our Auth & IAuth Repositories. We add it as a Service in `Startup.cs` so we can then use it throughout out app.
+Now in `ConfigureServices` function we want to add AuthRepo.
+How?
 3 options:
-	1) `AddSingleton`: single instnace of repo for our apps. Creates it 1 then uses it over and over for all calls
+   1) `AddSingleton`: single instnace of repo for our apps. Creates it 1x then uses it over and over for all calls
 		- Issues with concurrency therefore we ignore. Doesn't fit out purposes
-	2) `AddTransient`: Useful for light-weight statelss services; these are created each time for a new request
+   2) `AddTransient`: Useful for light-weight statelss services; these are created each time for a new request
 		- Each time a request comes in for our repo, then a new instance of our repo is created.
 		- Great for light-weight, but not exactly for what we need.
-	What we want is somewhere in the middle fot hese:
-	3) `AddScoped`: Service created once per reqeust within the scope. Creates 1 for each HTTP request, but
+   What we want is somewhere in the middle of these:
+   3) `AddScoped`: Service created once per reqeust within the scope. Creates 1 for each HTTP request, but
 	 uses the same instance in other calls within the same web request...
+   We need to specify Interface & Implementation.
+
+Now we create a new controller where we can inject our new repo and also add logic so 
+ people can log-in!
+
+***********
+Deep Dive into Controllers:
+
+`[ApiController]` is new to Core 2.1;
+- Its main feature, is that it enforces Attribute Routing (rather than conventional)
+- Additionally, it integrates in the validation we set.
+
+`ControllerBase` gives us access to HttpResponses & Actions (IActionResults). 
+The main difference between `ControllerBase` and `Controller` is that `ControllerBase` is base-class for a controller __without View Support__. Whereas, `Controller` is for one __with View Support__.
+
+Since our views come from Angular (& therefore our .NET project is really MC), we can stick with `ControllerBase` because we dont need Views.
+***********
+
+
+DTOS:
+We decide we don't want to pass in to our `AuthController/Register` function 2 different parameters.
+So, we decide to create a DTO for it.
+
+DTO? Data Transfer Object
+Used to map domain models into simpler objects that are used when we 
+ transfer data.
+
+Create a folder `Dtos`, new Class `AuthDto`
+
+Parameters that we send up to arm our methods via HTTP, ASP.NET Core MVC is automatically going to try to infer the params from the body, query string, or form.
+
+So, if we send in Username & Password strings in a request to our API, then our ASP.NET Core MVC will be able to map them to UseForRegisterDTO if we specify that that is what the function should take.
+
 
 
 ***********
@@ -462,23 +517,25 @@ Debugging:
 - If we want to debug a process, we can open the Debug window (shift+cmd+D), and attach to a process from there.
 - Set a break-point somewhere.
 - Next to the Green Arrow, it will say "No Configurations". Go in and add a configuration to `.NET Core`.
-- You'll then be moved to `launch.json` and will have some options. We select `.NET:Attach to local .NET Core...`
+- You'll then be moved to `launch.json` and will have some options. We select `.NET:Attach to local .NET Core Console App.`
 - This gives you a configuration called ".NET Core Attach".
 - Now in the drop-down you'll have `.NET Core Attach`
 - Start your BE server by running `dotnet run` or `dotnet watch run`
-- Then hit the green arrow and select `dotnet : DatingAPp.API.dll`
+- Then hit the green arrow and select `dotnet`/ `DatingAPp.API.dll`
 ***********
+
+
 
 ------------------------
 
 Token Authentication:
 
 
-JWT: JSON Web Tokens
+`JWT: JSON Web Tokens`
 	- Industry standard for tokens (RFC7519)
 	- Self-contained piece of data
 	- Server doesn't need to go back to DB to validate the user.
-		- Server can validate token itself w/o calling the data store.
+		- Should be able to validate token itself w/o calling the data store.
 			- Can decide for itself whether person is authenticated to use the app
 
 Structure of JWT:
@@ -492,14 +549,15 @@ Structure of JWT:
 {
 	"nameid":"8",
 	"unique_name": "frank",
-	"nbf":1511110407, //not before timestamp: earliest state the token can be used
+	"nbf":1511110407, //not-before timestamp: earliest state the token can be used
 	"exp":1511196807, //expiry timestamp: token not valid after
-	"iat":1511110407 //issued at timestamp
+	"iat":1511110407 //issued-at timestamp
 }
 (3) Secret: this is what's used to encode or hash the header & the payload
 HMACSHA256(
 	base64UrlEncode(header) + "." + 
 	base64UrlEncode(payload),
+	secret
 )
 Secret is stored on the server and is never revealed to the client
 Client sends token to the server, server uses their secret to validate the token
@@ -508,11 +566,11 @@ All the above 3 parts get hashed into 1 string:
 "asfhui3452389.dsih8325820afasf.-JHSAK89_ASD8UAFASAKGLA`
 
 1) Client sends username and password to Server
-2) Server validates and sends JWT to Client
+2) Server validates username & pass. If valid, it sends JWT to Client
 	- In case of auth, Server hashes password & compares it to hashed pwd in DB
 		- If match, it sends this JWT.
 	- Client stores JWT locally.
-3) Client sends JWT for further requests to Server
+3) For every future request that needs authentication, Client sends JWT to Server
 4) Server validates JWT and sends back response to Client
 	- Server doesn't need to go to data-store or check username & pass or anything like that.
 	- Simply by looking at the token, the server's able to verify the user
@@ -527,10 +585,16 @@ However, the client is not able to fool the server with fake tokens due to the s
 
 Now lets add authorization middleware to our API:
 
+We create a function `Login` in our `AuthController`, which will handle Login.
+When a user logs in, it checks to see if the listed username/password pair exists in our DB
+If it does exist, then it will return a JWT which the user will submit for future iterations
+
 The data annotation [Authorized] requires authorization, whereas the [AllowAnonymous] allows anyone to hit it.
 However, we need to specify to our code how it performs authorization. We do that by adding to our `./Startup.cs`
 We need to add AUthentication as a service:
 `service.ADdAuthentincation(....`
+
+We build a token thtat'll contain 2 types of information: the user's ID and the user's username. Check out Lecture #33, there's a lot of work involved.
 
 
 Now to test this in Postman, we:
